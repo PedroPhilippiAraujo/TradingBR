@@ -46,3 +46,32 @@ else:
     print("Data Already Downloaded")
 
 ```
+
+```{python}
+import pandas as pd
+import numpy as np
+
+```
+
+
+## Data Transformation
+
+```{python}
+
+df = pd.read_csv(archive_path,sep=";", encoding='latin1')
+
+
+df = df.rename(columns={'Data':'Date','433 - Índice nacional de preços ao consumidor-amplo (IPCA) - Var. % mensal': 'IPCA', '11753 - Índice da taxa de câmbio real (IPCA) - Jun/1994=100 - Dólar americano - Índice':'Exchange Rate', '20714 - Taxa média de juros das operações de crédito - Total - % a.a.': 'Interest Rate', '24363 - Índice de Atividade Econômica do Banco Central - IBC-Br - Índice': 'GDP', '24369 - Taxa de desocupação - PNADC - %': 'Unemployement Rate'})
+
+
+df = df.set_index('Date')
+
+df = df.drop(df[df["Exchange Rate"] == '-'].index)
+df = df.drop(df[df["Interest Rate"] == '-'].index)
+df = df.drop(df[df["Unemployement Rate"] == '-'].index)
+
+
+
+df.describe()
+
+```

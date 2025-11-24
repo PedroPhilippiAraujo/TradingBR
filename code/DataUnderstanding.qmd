@@ -50,6 +50,9 @@ else:
 ```{python}
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 ```
 
@@ -69,9 +72,65 @@ df = df.set_index('Date')
 df = df.drop(df[df["Exchange Rate"] == '-'].index)
 df = df.drop(df[df["Interest Rate"] == '-'].index)
 df = df.drop(df[df["Unemployement Rate"] == '-'].index)
+df = df.head(len(df)-1)
+
+df = df.replace(r',','.', regex=True)
+
+df['IPCA'] = df['IPCA'].astype(float)
+df['Exchange Rate'] = df['Exchange Rate'].astype(float)
+df['Interest Rate'] = df['Interest Rate'].astype(float)
+df['GDP'] = df['GDP'].astype(float)
+df['Unemployement Rate'] = df['Unemployement Rate'].astype(float)
 
 
+df.head()
 
-df.describe()
+```
+
+
+## Data Understanding
+
+```{python}
+sns.lineplot(data=df[0:40], x='Date', y='IPCA')
+plt.title('Line Plot of Date vs IPCA')
+plt.xlabel('Date')
+plt.xticks(rotation=90)
+plt.ylabel('IPCA')
+plt.show()
+plt.close()
+
+
+sns.lineplot(data=df[0:40], x='Date', y='Exchange Rate')
+plt.title('Line Plot of Date vs Exchange Rate')
+plt.xlabel('Date')
+plt.xticks(rotation=90)
+plt.ylabel('Exchange Rate')
+plt.show()
+plt.close()
+
+sns.lineplot(data=df[0:40], x='Date', y='Interest Rate')
+plt.title('Line Plot of Date vs Interest Rate')
+plt.xlabel('Date')
+plt.xticks(rotation=90)
+plt.ylabel('Interest Rate')
+plt.show()
+plt.close()
+
+
+sns.lineplot(data=df[0:40], x='Date', y='GDP')
+plt.title('Line Plot of Date vs GDP')
+plt.xlabel('Date')
+plt.xticks(rotation=90)
+plt.ylabel('GDP')
+plt.show()
+plt.close()
+
+sns.lineplot(data=df[0:40], x='Date', y='Unemployement Rate')
+plt.title('Line Plot of Date vs Unemployement Rate')
+plt.xlabel('Date')
+plt.xticks(rotation=90)
+plt.ylabel('Unemployement Rates')
+plt.show()
+plt.close()
 
 ```

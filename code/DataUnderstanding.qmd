@@ -20,6 +20,13 @@ The purpose of this notebook is to acquire and understand data from the Banco Ce
 
 We are going to download through url request the following series of data:
 
+433 - Índice nacional de preços ao consumidor-amplo (IPCA) -- National index of ample-consumer prices: Measures inflation.
+
+11753 - Índice da taxa de câmbio real (IPCA) -- Exchange rate index to dollars : Measures how much a Brazilian Real (R$) is valued in comparison to a dollar.
+
+24363 - Índice de Atividade Econômica do Banco Central - IBC-Br  -- Central Bank economic activity indes: Similar to GPD, but on a monthly basis.
+
+ 24369 - Taxa de desocupação - PNADC -- unemployment rate 
 
 
 ```{python}
@@ -35,5 +42,7 @@ archive_path = "../data/sgsdata.csv"
 
 if not (os.path.exists(archive_path)):
     urllib.request.urlretrieve(interesturl, archive_path)
+else:
+    print("Data Already Downloaded")
 
 ```

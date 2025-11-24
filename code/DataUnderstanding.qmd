@@ -1,0 +1,39 @@
+---
+title: "Analysis of interest rate in Brazil"
+Author: "Pedro Philippi Araujo
+format: 
+  html: 
+    embed: true
+execute:
+  environment: metabric   
+kernel: metabric
+---
+
+
+
+## Introduction
+
+The purpose of this notebook is to acquire and understand data from the Banco Central do Brasil (Brazil Central Bank) in order to create a model prediction for interest rates.
+
+
+## Data Acquisition
+
+We are going to download through url request the following series of data:
+
+
+
+```{python}
+
+
+import os
+import urllib.request
+
+
+interesturl = "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?method=downLoad"
+
+archive_path = "../data/sgsdata.csv"
+
+if not (os.path.exists(archive_path)):
+    urllib.request.urlretrieve(interesturl, archive_path)
+
+```

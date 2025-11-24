@@ -1,0 +1,17 @@
+name: metabric
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - jupyter
+  - ipykernel
+  - numpy
+  - urllib3
+  - pytorch
+  - torchvision
+  - scikit-learn
+  - matplotlib
+  - pandas
+  - seaborn
+  - umap-learn
+  - click

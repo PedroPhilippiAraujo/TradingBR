@@ -1,12 +1,13 @@
 ---
 title: "Analysis of interest rate in Brazil"
-Author: "Pedro Philippi Araujo
+Author: "Pedro Philippi Araujo"
 format: 
   html: 
     embed: true
 execute:
-  environment: metabric   
-kernel: metabric
+  environment: python3
+jupyter: python3
+kernel: python3
 ---
 
 

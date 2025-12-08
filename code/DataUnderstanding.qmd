@@ -53,7 +53,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import torch
+import torch.nn as nn
 
 ```
 
@@ -84,7 +85,8 @@ df['GDP'] = df['GDP'].astype(float)
 df['Unemployement Rate'] = df['Unemployement Rate'].astype(float)
 
 
-df.head()
+#df.head()
+df.shape
 
 ```
 
@@ -134,4 +136,72 @@ plt.ylabel('Unemployement Rates')
 plt.show()
 plt.close()
 
+```
+
+
+
+
+## First Modeling
+```{python}
+
+
+
+#Tensor Conversion
+
+X = df.drop(columns=['Interest Rate']).values #X = all expression data
+
+Y = df["Interest Rate"].values #Y = Claudin subtype
+
+
+X = torch.tensor(X, dtype=torch.float32)
+Y = torch.tensor(Y, dtype=torch.float32)
+
+
+print("Conversion to tensor done")
+print(X)
+
+```
+
+
+```{python}
+
+losslist = []
+n_epochs = 5
+model = nn.Linear(4, 1)  
+
+# all below as before
+loss_func = nn.MSELoss()  
+optimizer = torch.optim.SGD(model.parameters()) 
+
+model.train()
+for epoch in range(n_epochs):
+    y_pred = model(X) 
+    loss = loss_func(y_pred, Y)
+    losslist.append(loss.item())
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+print("Fitted parameters:")
+print("Intercept (bias):", model.bias.item())
+
+## Notice more weights
+print("Coefficients (weights):", model.weight.detach().numpy())
+print('Loss: ', loss)  
+```
+
+
+```{python}
+#loss plot
+
+xs = [x for x in range(len(losslist))]
+plt.figure(figsize=(8, 5))
+plt.plot(xs, losslist, linewidth=2)
+plt.xlabel('Epoch', fontsize=12)
+plt.ylabel('Training Loss (Cross-Entropy)', fontsize=12)
+plt.title('Deep Learning Model - Training Loss Over Time', fontsize=14, fontweight='bold')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+plt.close()
 ```

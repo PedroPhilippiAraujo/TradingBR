@@ -1,0 +1,101 @@
+## First Modeling
+
+
+```{python}
+import torch
+import torch.nn as nn
+```
+
+```{python}
+
+
+
+#Tensor Conversion
+
+df_train = df.sample(frac=0.8)
+df_test = df - df_train
+
+
+
+X_train = df_train.drop(columns=['Interest Rate']).values #X = all expression data
+X_test = df_test.drop(columns=['Interest Rate']).values
+
+
+Y_train = df_train["Interest Rate"].values 
+Y_test = df_test['Interest Rate'].values
+
+
+X_train = torch.tensor(X_train, dtype=torch.float32)
+X_test = torch.tensor(X_test, dtype=torch.float32)
+Y_train = torch.tensor(Y_train, dtype=torch.float32)
+Y_test = torch.tensor(Y_test, dtype=torch.float32)
+
+
+print("Conversion to tensor done")
+print(X_train)
+
+```
+
+
+```{python}
+
+losslist = []
+n_epochs = 5
+model = nn.Linear(4, 1)  
+
+# all below as before
+loss_func = nn.MSELoss()  
+optimizer = torch.optim.SGD(model.parameters()) 
+
+model.train()
+for epoch in range(n_epochs):
+    y_pred = model(X_train) 
+    loss = loss_func(y_pred, Y_train)
+    losslist.append(loss.item())
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+print("Fitted parameters:")
+print("Intercept (bias):", model.bias.item())
+
+## Notice more weights
+print("Coefficients (weights):", model.weight.detach().numpy())
+print('Loss: ', loss)  
+```
+
+
+```{python}
+#loss plot
+
+xs = [x for x in range(len(losslist))]
+plt.figure(figsize=(8, 5))
+plt.plot(xs, losslist, linewidth=2)
+plt.xlabel('Epoch', fontsize=12)
+plt.ylabel('Training Loss (Cross-Entropy)', fontsize=12)
+plt.title('Deep Learning Model - Training Loss Over Time', fontsize=14, fontweight='bold')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+plt.close()
+```
+
+# Model Evaluation
+
+```{python}
+#Model Evaluation
+
+model.eval()
+with torch.no_grad():
+    z_out = model(X_test)
+    y_prob = z_out.softmax(dim=1) # for easier interpretation
+    y_pred = z_out.argmax(dim=1)  # class predition = largest logit
+    acc = (y_pred == Y_test).float().mean().item()
+
+print('y_true:     ', Y_test[:7])
+#print('z (logits): ', z_out[:7])
+print('y_prob:     ', y_prob[:7])
+print('y_pred:     ', y_pred[:7])
+
+print(f"\n\nTraining accuracy: {acc:.3f}")
+```

@@ -37,14 +37,27 @@ import os
 import urllib.request
 
 
-interesturl = "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?method=downLoad"
+parameters_url = "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?method=downLoad"
 
-archive_path = "../data/sgsdata.csv"
+selic_url1 = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=csv&dataInicial=01/03/2012&dataFinal=01/03/2022"
 
-if not (os.path.exists(archive_path)):
-    urllib.request.urlretrieve(interesturl, archive_path)
-else:
-    print("Data Already Downloaded")
+selic_url2 = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=csv&dataInicial=26/02/2022&dataFinal=25/05/2025"
+
+archive_path_params = "../data/sgsdata.csv"
+
+archive_path_selic1 = "../data/selicdatapt1.csv"
+
+archive_path_selic2 = "../data/selicdatapt2.csv"
+
+if not (os.path.exists(archive_path_params)):
+    urllib.request.urlretrieve(parameters_url, archive_path)
+if not (os.path.exists(archive_path_selic1)):
+    urllib.request.urlretrieve(selic_url1, archive_path_selic1)
+if not (os.path.exists(archive_path_selic2)):
+    urllib.request.urlretrieve(selic_url2, archive_path_selic2)
+
+
+print("Data Downloaded")
 
 ```
 
@@ -53,17 +66,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import torch
-import torch.nn as nn
+
 
 ```
 
 
-## Data Transformation
+## Data Transformation of Parameters Dataframe
 
 ```{python}
 
-df = pd.read_csv(archive_path,sep=";", encoding='latin1')
+df = pd.read_csv(archive_path_params,sep=";", encoding='latin1')
 
 
 df = df.rename(columns={'Data':'Date','433 - Índice nacional de preços ao consumidor-amplo (IPCA) - Var. % mensal': 'IPCA', '11753 - Índice da taxa de câmbio real (IPCA) - Jun/1994=100 - Dólar americano - Índice':'Exchange Rate', '20714 - Taxa média de juros das operações de crédito - Total - % a.a.': 'Interest Rate', '24363 - Índice de Atividade Econômica do Banco Central - IBC-Br - Índice': 'GDP', '24369 - Taxa de desocupação - PNADC - %': 'Unemployement Rate'})
@@ -85,8 +97,14 @@ df['GDP'] = df['GDP'].astype(float)
 df['Unemployement Rate'] = df['Unemployement Rate'].astype(float)
 
 
-#df.head()
-df.shape
+
+df.index = pd.to_datetime(df.index)
+
+df_daily = df.resample("D").ffill()
+
+
+df_daily.head
+
 
 ```
 
@@ -140,98 +158,54 @@ plt.close()
 
 
 
+# Data Transformation of SELIC Rate
 
-## First Modeling
+
 ```{python}
 
+df_selic = pd.read_csv(archive_path_selic1, sep=";", encoding='latin1')
 
-
-#Tensor Conversion
-
-df_train = df.sample(frac=0.8)
-df_test = df - df_train
+df_selic2 = pd.read_csv(archive_path_selic2, sep=';', encoding='latin1')
 
 
 
-X_train = df_train.drop(columns=['Interest Rate']).values #X = all expression data
-X_test = df_test.drop(columns=['Interest Rate']).values
+df_selic = pd.concat([df_selic, df_selic2], ignore_index=True)
 
 
-Y_train = df_train["Interest Rate"].values 
-Y_test = df_test['Interest Rate'].values
+df_selic = df_selic.rename(columns={'data':'Date', 'valor':'SELIC'})
+
+df_selic["Date"] = pd.to_datetime(df_selic["Date"],format="%d/%m/%Y")
+
+df_selic = df_selic.set_index('Date')
+
+df_selic = df_selic.replace(r',','.', regex=True)
+
+df_selic['SELIC'] = df_selic['SELIC'].astype(float)
 
 
-X_train = torch.tensor(X_train, dtype=torch.float32)
-X_test = torch.tensor(X_test, dtype=torch.float32)
-Y_train = torch.tensor(Y_train, dtype=torch.float32)
-Y_test = torch.tensor(Y_test, dtype=torch.float32)
+df_selic['SELIC+30'] = df_selic["SELIC"].shift(-30)
 
+df_selic = df_selic.dropna()
 
-print("Conversion to tensor done")
-print(X_train)
+df_selic['Variation'] = df_selic["SELIC+30"] - df_selic["SELIC"]
+
+df_selic.head
+
 
 ```
 
 
-```{python}
 
-losslist = []
-n_epochs = 5
-model = nn.Linear(4, 1)  
-
-# all below as before
-loss_func = nn.MSELoss()  
-optimizer = torch.optim.SGD(model.parameters()) 
-
-model.train()
-for epoch in range(n_epochs):
-    y_pred = model(X_train) 
-    loss = loss_func(y_pred, Y_train)
-    losslist.append(loss.item())
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-print("Fitted parameters:")
-print("Intercept (bias):", model.bias.item())
-
-## Notice more weights
-print("Coefficients (weights):", model.weight.detach().numpy())
-print('Loss: ', loss)  
-```
-
+# Join of the two dataframes
 
 ```{python}
-#loss plot
 
-xs = [x for x in range(len(losslist))]
-plt.figure(figsize=(8, 5))
-plt.plot(xs, losslist, linewidth=2)
-plt.xlabel('Epoch', fontsize=12)
-plt.ylabel('Training Loss (Cross-Entropy)', fontsize=12)
-plt.title('Deep Learning Model - Training Loss Over Time', fontsize=14, fontweight='bold')
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.show()
-plt.close()
-```
+df_final = df_daily.join(df_selic)
 
-# Model Evaluation
+df_final = df_final.dropna()
 
-```{python}
-#Model Evaluation
+df_final.head
 
-model.eval()
-with torch.no_grad():
-    z_out = model(X_test)
-    y_prob = z_out.softmax(dim=1) # for easier interpretation
-    y_pred = z_out.argmax(dim=1)  # class predition = largest logit
-    acc = (y_pred == Y_test).float().mean().item()
+df_final.to_csv('../data/databasefinal.csv')
 
-print('y_true:     ', Y_test[:7])
-#print('z (logits): ', z_out[:7])
-print('y_prob:     ', y_prob[:7])
-print('y_pred:     ', y_pred[:7])
-
-print(f"\n\nTraining accuracy: {acc:.3f}")
 ```

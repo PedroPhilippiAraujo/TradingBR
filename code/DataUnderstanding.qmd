@@ -206,6 +206,7 @@ df_final = df_final.dropna()
 
 df_final.head
 
+#Save to CSV
 df_final.to_csv('../data/databasefinal.csv')
 
 ```

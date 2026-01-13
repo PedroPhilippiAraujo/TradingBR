@@ -44,7 +44,7 @@ n_epochs = 5
 model = nn.Linear(4, 1)  
 
 # all below as before
-loss_func = nn.MSELoss()  
+loss_func = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters()) 
 
 model.train()
